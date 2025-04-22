@@ -38,7 +38,7 @@ data_test = {"predictors": predictors_test, "outcome": outcome_test}
 
 # Construct model and optimize model
 model: UncensoredModel = UncensoredModel()
-model = optimize_model(model, int(1e3), data_train, 1e-3)
+model = optimize_model(model, int(5e4), data_train, 1e-4)
 # model.eval(data_train)
 
 # Compute training set coverage frequencies
@@ -67,7 +67,7 @@ coverage_test: Array = (
 
 
 results: DataFrame = pl.DataFrame({
-    'alpha': alpha.tolist(),
+    'target': (1.0 - alpha).tolist(),
     'training_coverage': coverage_train.tolist(),
     'testing_coverage': coverage_test.tolist()
 })

@@ -10,40 +10,33 @@ from bayinx import Model, Parameter
 from bayinx.dists import posnormal
 from jaxtyping import Array, Key, Scalar
 
+# Construct network architecture
 n_features: int = 159
-d1_inner: int = 512
-d2_inner: int = 256
+d_inner: int = 100
 
+key: Key = jr.PRNGKey(0)
+mu_arch = [
+    eqx.nn.LayerNorm(n_features),
+    eqx.nn.MLP(n_features, 'scalar', d_inner, 5, key = key),
+]
+sigma_arch = [
+    eqx.nn.LayerNorm(n_features),
+    eqx.nn.MLP(n_features, 'scalar', d_inner, 5, key = key, final_activation = jnp.exp),
+]
 
 class UncensoredModel(Model):
     mu_mapping: Parameter[eqx.nn.Sequential]
     sigma_mapping: Parameter[eqx.nn.Sequential]
 
-    def __init__(self, key: Key = jr.PRNGKey(0)):
-        keys: Key = jr.split(key, 6)
+    def __init__(self):
         self.mu_mapping = Parameter(
             eqx.nn.Sequential(
-                [
-                    eqx.nn.LayerNorm(n_features),
-                    eqx.nn.Linear(n_features, d1_inner, key=keys[0]),
-                    eqx.nn.Lambda(jax.nn.relu),
-                    eqx.nn.Linear(d1_inner, d2_inner, key=keys[1]),
-                    eqx.nn.Lambda(jax.nn.relu),
-                    eqx.nn.Linear(d2_inner, "scalar", key=keys[2]),
-                ]
+                mu_arch
             )
         )
         self.sigma_mapping = Parameter(
             eqx.nn.Sequential(
-                [
-                    eqx.nn.LayerNorm(n_features),
-                    eqx.nn.Linear(n_features, d1_inner, key=keys[3]),
-                    eqx.nn.Lambda(jax.nn.leaky_relu),
-                    eqx.nn.Linear(d1_inner, d2_inner, key=keys[4]),
-                    eqx.nn.Lambda(jax.nn.leaky_relu),
-                    eqx.nn.Linear(d2_inner, "scalar", key=keys[5]),
-                    eqx.nn.Lambda(jnp.exp),
-                ]
+                sigma_arch
             )
         )
 
@@ -79,31 +72,15 @@ class CensoredModel(Model):
     mu_mapping: Parameter[eqx.nn.Sequential]
     sigma_mapping: Parameter[eqx.nn.Sequential]
 
-    def __init__(self, key: Key = jr.PRNGKey(0)):
-        keys: Key = jr.split(key, 6)
+    def __init__(self):
         self.mu_mapping = Parameter(
             eqx.nn.Sequential(
-                [
-                    eqx.nn.LayerNorm(n_features),
-                    eqx.nn.Linear(n_features, d1_inner, key=keys[0]),
-                    eqx.nn.Lambda(jax.nn.relu),
-                    eqx.nn.Linear(d1_inner, d2_inner, key=keys[1]),
-                    eqx.nn.Lambda(jax.nn.relu),
-                    eqx.nn.Linear(d2_inner, "scalar", key=keys[2]),
-                ]
+                mu_arch
             )
         )
         self.sigma_mapping = Parameter(
             eqx.nn.Sequential(
-                [
-                    eqx.nn.LayerNorm(n_features),
-                    eqx.nn.Linear(n_features, d1_inner, key=keys[3]),
-                    eqx.nn.Lambda(jax.nn.leaky_relu),
-                    eqx.nn.Linear(d1_inner, d2_inner, key=keys[4]),
-                    eqx.nn.Lambda(jax.nn.leaky_relu),
-                    eqx.nn.Linear(d2_inner, "scalar", key=keys[5]),
-                    eqx.nn.Lambda(jnp.exp),
-                ]
+                sigma_arch
             )
         )
 

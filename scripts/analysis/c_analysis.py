@@ -40,7 +40,7 @@ data_test: Dict[str, Array] = {"predictors": predictors_test, "outcome": outcome
 
 # Construct model and optimize model
 model: CensoredModel = CensoredModel()
-model = optimize_model(model, int(1e3), data_train, 1e-3)
+model = optimize_model(model, int(5e4), data_train, 1e-4)
 # model.eval(data_train)
 
 # Compute training set coverage frequencies on uncensored individuals
